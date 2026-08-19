@@ -13,6 +13,8 @@ Use the pinned `mise` toolchain, keep evaluations isolated, and distinguish dete
 - For credential-free model scoring, run `mise run eval-smoke`.
 - For the configured live model benchmark, run `mise run model-benchmark`.
 - For native binary size, RSS, startup, and command latency, run `mise run benchmark`.
+- For strict Kubernetes schema validation, run `mise run manifest-check`.
+- For high/critical dependency, secret, and configuration findings, run `mise run security`.
 - For real Kubernetes observation objectives, use the dedicated `kz-eval` minikube profile with the `minikube-up`, `e2e`, and `minikube-down` tasks.
 
 Do not describe the current minikube detector bridge as a completed autonomous mutation controller. Read `docs/roadmap.md` for the implemented boundary.
@@ -43,10 +45,13 @@ A transport or parse failure is an objective failure, but it is not an unsafe pr
 ## Run Minikube Objectives
 
 1. Confirm a working minikube driver and use only the dedicated `kz-eval` profile.
+   On macOS Podman, start the dedicated machine, select the `kz-eval-root` connection, and set `KZ_MINIKUBE_DRIVER=podman` plus `KZ_MINIKUBE_CONTAINER_RUNTIME=cri-o`.
 2. Start the profile with `mise run minikube-up`.
 3. Build with `mise run build`, then run `mise run e2e`.
 4. Preserve the JSON report and inspect failed objective evidence.
 5. Stop the profile with `mise run minikube-down` when finished.
+
+The Service objective must observe at least one EndpointSlice before it can pass. Kubernetes may encode an empty slice as either `endpoints: []` or `endpoints: null`; missing or malformed slices continue polling. Unless `--keep` is explicit, verify that the harness removes `kz-eval` even after failure.
 
 Do not target another cluster, namespace, or profile unless the user explicitly expands scope. The harness may clean only its isolated `kz-eval` namespace.
 

@@ -14,12 +14,17 @@ pub fn Partition(comptime capacity: usize) type {
     return struct {
         const Self = @This();
 
-        entries: [capacity]Entry = undefined,
+        entries: [capacity]Entry,
         len: usize = 0,
         generation: u64 = 0,
         resource_version: []const u8 = "",
         synchronized: bool = false,
         stale: bool = true,
+
+        pub fn init() Self {
+            // SAFETY: len starts at zero, so entries are never read before upsert initializes them.
+            return .{ .entries = undefined };
+        }
 
         pub fn beginRelist(self: *Self) void {
             self.stale = true;
@@ -78,7 +83,7 @@ fn makeEntry(uid: []const u8, version: []const u8) Entry {
 }
 
 test "relist atomically gates mutation and replaces partition" {
-    var partition = Partition(2){};
+    var partition = Partition(2).init();
     partition.beginRelist();
     try partition.upsert(makeEntry("pod-1", "1"));
     try std.testing.expect(!partition.canAuthorizeMutation());
@@ -94,7 +99,7 @@ test "relist atomically gates mutation and replaces partition" {
 }
 
 test "cache capacity is bounded" {
-    var partition = Partition(1){};
+    var partition = Partition(1).init();
     try partition.upsert(makeEntry("pod-1", "1"));
     try std.testing.expectError(error.CapacityExceeded, partition.upsert(makeEntry("pod-2", "2")));
 }

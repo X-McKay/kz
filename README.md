@@ -19,7 +19,7 @@ The current `0.1.0-dev` vertical slice contains:
 - a provider-neutral native interface with an initial `llm.almckay.io` OpenAI-compatible profile;
 - a minikube fault-injection suite for real CrashLoop, image-pull, and Service endpoint failures;
 - startup, command-latency, RSS, and binary-size benchmarks;
-- CI for formatting, unit/security invariants, eval smoke tests, build targets, performance budgets, and minikube chaos objectives.
+- CI for Zig linting and ReleaseSafe tests, workflow and repository security, strict Kubernetes manifests, unit/safety invariants, eval smoke tests, build targets, performance budgets, and minikube chaos objectives.
 
 The live Kubernetes LIST/WATCH transport, cache/graph population, persistent incident manager, model gateway inside the Zig controller, and approval-gated mutation executor remain subsequent milestones. The minikube suite currently injects and observes real cluster failures, then evaluates the native deterministic detector over reduced observations; it does **not** claim that a live autonomous mutation path exists yet. See [the roadmap](docs/roadmap.md).
 
@@ -32,9 +32,11 @@ mise trust
 mise install
 mise run check
 mise run benchmark
+mise run manifest-check
+mise run security
 ```
 
-The repository pins Zig, Python, minikube, and kubectl in `.mise.toml`. No project runtime should need to be installed globally.
+The repository pins Zig, Python, minikube, kubectl, ZLS, ZLint, actionlint, ShellCheck, zizmor, kubeconform, and Trivy in `.mise.toml`. No project or development runtime should need to be installed globally.
 
 Try the read-only CLI:
 
@@ -109,7 +111,19 @@ Generated 2026-08-19 01:44:30 UTC from 50 cases × 1 repetition(s) at concurrenc
 
 ## Run minikube chaos objectives
 
-A working minikube driver is required (Docker, vfkit, etc.). The suite uses a dedicated `kz-eval` profile and namespace.
+A working minikube driver is required. The suite uses a dedicated `kz-eval` profile and namespace and reserves 4 GiB for the cluster so a 6 GiB host VM retains enough overhead.
+
+On macOS with Podman, initialize the dedicated VM once, start it, and select its root connection as required by Minikube's Podman driver:
+
+```bash
+podman machine init --cpus 4 --memory 6144 --disk-size 20 kz-eval
+podman machine start kz-eval
+podman system connection default kz-eval-root
+export KZ_MINIKUBE_DRIVER=podman
+export KZ_MINIKUBE_CONTAINER_RUNTIME=cri-o
+```
+
+If the VM already exists, omit `podman machine init`. Docker, vfkit, and other supported drivers can instead set the two `KZ_MINIKUBE_*` variables appropriately or leave them unset for Minikube auto-detection.
 
 ```bash
 mise run minikube-up
@@ -118,7 +132,7 @@ mise run e2e
 mise run minikube-down
 ```
 
-The harness applies bounded failure fixtures, waits for observable cluster state, invokes the native detector, writes a machine-readable report, and removes the namespace unless `--keep` is passed.
+The harness applies bounded failure fixtures, waits for observable cluster state, invokes the native detector, writes a machine-readable report, and removes the namespace unless `--keep` is passed. EndpointSlice observation handles Kubernetes' explicit `endpoints: null` encoding and waits for slice creation before declaring an empty Service backend.
 
 ## AI-assisted development and usage
 

@@ -3,6 +3,13 @@ zig = "0.16.0"
 python = "3.14.7"
 minikube = "1.38.1"
 kubectl = "1.35.1"
+zls = "0.16.0"
+"github:DonIsaac/zlint" = "0.9.1"
+actionlint = "1.7.12"
+shellcheck = "0.11.0"
+kubeconform = "0.7.0"
+trivy = "0.74.0"
+zizmor = "1.29.0"
 
 [env]
 KZ_ENV = "development"
@@ -22,8 +29,8 @@ run = [
 ]
 
 [tasks.check]
-description = "Run fast formatting, build, and unit checks"
-depends = ["fmt-check", "python-check", "python-test", "skill-check", "build", "test", "eval-smoke"]
+description = "Run fast offline formatting, linting, build, and unit checks"
+depends = ["fmt-check", "lint", "python-check", "python-test", "skill-check", "build", "test", "release-safe-test", "eval-smoke"]
 
 [tasks.fmt-check]
 description = "Verify Zig formatting without changing files"
@@ -34,8 +41,26 @@ description = "Compile-check Python tooling"
 run = "python -m compileall -q scripts tests/evals tests/chaos"
 
 [tasks.python-test]
-description = "Run provider and evaluation tooling unit tests"
-run = "python -m unittest discover -s tests/evals -p 'test_*.py'"
+description = "Run provider, evaluation, and chaos-harness unit tests"
+run = [
+  "python -m unittest discover -s tests/evals -p 'test_*.py'",
+  "python -m unittest discover -s tests/chaos -p 'test_*.py'",
+]
+
+[tasks.lint]
+description = "Run Zig and GitHub Actions linters"
+depends = ["zig-lint", "workflow-lint"]
+
+[tasks.zig-lint]
+description = "Run ZLint with warnings treated as failures"
+run = "zlint --deny-warnings"
+
+[tasks.workflow-lint]
+description = "Lint workflow syntax, shell snippets, and GitHub Actions security"
+run = [
+  "actionlint",
+  "zizmor .",
+]
 
 [tasks.skill-check]
 description = "Validate mirrored Codex and Claude repository skills"
@@ -48,6 +73,10 @@ run = "zig build"
 [tasks.test]
 description = "Run deterministic Zig tests"
 run = "zig build test"
+
+[tasks.release-safe-test]
+description = "Run deterministic Zig tests with optimizations and safety checks"
+run = "zig build test -Doptimize=ReleaseSafe"
 
 [tasks.eval-smoke]
 description = "Run deterministic model-evaluation smoke cases"
@@ -67,7 +96,7 @@ run = "python scripts/benchmark.py --binary zig-out/bin/kz --output .artifacts/b
 
 [tasks.minikube-up]
 description = "Start the isolated kz evaluation cluster"
-run = "minikube start -p kz-eval --kubernetes-version=v1.35.1 --cpus=4 --memory=6144"
+run = "minikube start -p kz-eval --kubernetes-version=v1.35.1 --cpus=4 --memory=4096 ${KZ_MINIKUBE_DRIVER:+--driver=$KZ_MINIKUBE_DRIVER} ${KZ_MINIKUBE_CONTAINER_RUNTIME:+--container-runtime=$KZ_MINIKUBE_CONTAINER_RUNTIME}"
 
 [tasks.minikube-down]
 description = "Stop the isolated kz evaluation cluster"
@@ -77,6 +106,17 @@ run = "minikube stop -p kz-eval"
 description = "Run objective and chaos scenarios against minikube"
 run = "python tests/chaos/run.py --profile kz-eval --report .artifacts/chaos/results.json"
 
+[tasks.manifest-check]
+description = "Strictly validate Kubernetes manifests against v1.35 schemas"
+run = [
+  "mkdir -p .kubeconform-cache",
+  "kubeconform -strict -summary -kubernetes-version 1.35.0 -skip Kustomization -cache .kubeconform-cache deploy tests/chaos/fixtures/scenarios.yaml",
+]
+
+[tasks.security]
+description = "Scan source, configuration, secrets, and dependencies for high-severity findings"
+run = "trivy fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --exit-code 1 --cache-dir .trivy-cache --skip-dirs .artifacts --skip-dirs .git --skip-dirs .kube --skip-dirs .kubeconform-cache --skip-dirs .minikube --skip-dirs .trivy-cache --skip-dirs .zig-global-cache --skip-dirs zig-out ."
+
 [tasks.ci]
-description = "Run the local equivalent of required CI checks"
-depends = ["check", "benchmark"]
+description = "Run the full local equivalent of required CI checks"
+depends = ["check", "benchmark", "manifest-check", "security"]

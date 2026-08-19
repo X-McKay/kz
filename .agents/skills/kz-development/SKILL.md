@@ -49,5 +49,6 @@ Treat model output as untrusted diagnostic input and preserve the deterministic 
 1. Update public behavior, limitations, configuration, and operator steps in the appropriate docs.
 2. Run focused tests while iterating.
 3. Run `mise run check` before handing off.
-4. Run native benchmarks or minikube objectives when the change can affect their measured boundary.
-5. Report commands run, objective results, and any verification that could not be completed.
+4. Run `mise run manifest-check` for Kubernetes YAML and `mise run security` for dependency, secret, or configuration changes.
+5. Run native benchmarks or minikube objectives when the change can affect their measured boundary.
+6. Report commands run, objective results, and any verification that could not be completed.

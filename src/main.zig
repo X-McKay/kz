@@ -2,6 +2,7 @@ const std = @import("std");
 const kz = @import("root.zig");
 
 pub const version = "0.1.0-dev";
+// SAFETY: main assigns process_io from Init before any command can call write.
 var process_io: std.Io = undefined;
 
 pub fn main(init: std.process.Init) !void {
