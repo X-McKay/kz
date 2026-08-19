@@ -2,8 +2,6 @@
 
 `kz` is a small, event-driven Kubernetes reliability controller under active development. It keeps deterministic cluster observation, safety policy, execution, and verification outside the model; an LLM is only a constrained diagnosis and planning component.
 
-This repository changes the design's original working name from **kx** to **kz** everywhere in the product surface.
-
 ## What is implemented
 
 The current `0.1.0-dev` vertical slice contains:
