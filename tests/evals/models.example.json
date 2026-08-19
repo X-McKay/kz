@@ -1,0 +1,24 @@
+{
+  "providers": [
+    {
+      "name": "almckay-llm",
+      "type": "openai-compatible",
+      "base_url": "https://llm.almckay.io/v1",
+      "api_key_env": "KZ_MODEL_API_KEY",
+      "models": ["Qwen3.6-35B-A3B-NVFP4"],
+      "response_format": "json_object",
+      "max_output_tokens": 4096,
+      "timeout_seconds": 90
+    },
+    {
+      "name": "remote-compatible",
+      "type": "openai-compatible",
+      "base_url_env": "KZ_MODEL_BASE_URL",
+      "api_key_env": "KZ_MODEL_API_KEY",
+      "models_env": "KZ_EVAL_MODELS",
+      "response_format": "json_object",
+      "max_output_tokens": 4096,
+      "timeout_seconds": 60
+    }
+  ]
+}

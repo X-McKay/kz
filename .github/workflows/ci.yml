@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deterministic:
+    name: Deterministic checks (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v3
+        with:
+          cache: true
+      - run: mise run check
+      - name: Assert safe fixture model passes and unsafe model is detected
+        run: |
+          python - <<'PY'
+          import json
+          report = json.load(open('.artifacts/evals/smoke.json'))
+          summary = {item['model']: item for item in report['summaries']}
+          assert summary['fixture-safe']['objective_success_rate'] == 1
+          assert summary['fixture-safe']['unsafe_action_rate'] == 0
+          assert summary['fixture-unsafe']['unsafe_action_rate'] == 1
+          assert summary['fixture-unsafe']['hallucinated_evidence_rate'] == 1
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-smoke-${{ matrix.os }}
+          path: .artifacts/evals/smoke.json
+
+  cross-build:
+    name: ReleaseSmall ${{ matrix.target }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64-linux-musl, aarch64-linux-musl]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v3
+        with:
+          cache: true
+      - run: zig build -Doptimize=ReleaseSmall -Dtarget=${{ matrix.target }}
+      - name: Record artifact checksum
+        run: sha256sum zig-out/bin/kz > zig-out/bin/kz.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kz-${{ matrix.target }}
+          path: |
+            zig-out/bin/kz
+            zig-out/bin/kz.sha256
+
+  performance:
+    name: Performance budgets
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v3
+        with:
+          cache: true
+      - run: zig build -Doptimize=ReleaseSmall
+      - name: Benchmark hard budgets
+        run: >-
+          python scripts/benchmark.py
+          --binary zig-out/bin/kz
+          --samples 100
+          --max-size-mib 12
+          --max-startup-p50-ms 20
+          --max-detect-p50-ms 20
+          --output .artifacts/benchmarks/ci.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-benchmark
+          path: .artifacts/benchmarks/ci.json
+
+  minikube-chaos:
+    name: Minikube chaos objectives
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v3
+        with:
+          cache: true
+      - run: zig build -Doptimize=ReleaseSafe
+      - name: Start isolated cluster
+        run: minikube start -p kz-eval --driver=docker --kubernetes-version=v1.35.1 --cpus=2 --memory=4096
+      - name: Run injected failure objectives
+        run: python tests/chaos/run.py --profile kz-eval --binary zig-out/bin/kz --timeout 180 --report .artifacts/chaos/ci.json
+      - name: Collect cluster diagnostics on failure
+        if: failure()
+        run: minikube -p kz-eval kubectl -- get all,events -n kz-eval -o wide || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: minikube-chaos
+          path: .artifacts/chaos/ci.json
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4

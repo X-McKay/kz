@@ -1,0 +1,82 @@
+[tools]
+zig = "0.16.0"
+python = "3.14.7"
+minikube = "1.38.1"
+kubectl = "1.35.1"
+
+[env]
+KZ_ENV = "development"
+KZ_MODEL_PROVIDER = "openai-compatible"
+KZ_MODEL_BASE_URL = "https://llm.almckay.io/v1"
+KZ_MODEL = "Qwen3.6-35B-A3B-NVFP4"
+PYTHONDONTWRITEBYTECODE = "1"
+ZIG_GLOBAL_CACHE_DIR = "{{config_root}}/.zig-global-cache"
+MINIKUBE_HOME = "{{config_root}}/.minikube"
+KUBECONFIG = "{{config_root}}/.kube/config"
+
+[tasks.fmt]
+description = "Format Zig and Python sources"
+run = [
+  "zig fmt build.zig src",
+  "python -m compileall -q scripts tests/evals tests/chaos",
+]
+
+[tasks.check]
+description = "Run fast formatting, build, and unit checks"
+depends = ["fmt-check", "python-check", "python-test", "skill-check", "build", "test", "eval-smoke"]
+
+[tasks.fmt-check]
+description = "Verify Zig formatting without changing files"
+run = "zig fmt --check build.zig src"
+
+[tasks.python-check]
+description = "Compile-check Python tooling"
+run = "python -m compileall -q scripts tests/evals tests/chaos"
+
+[tasks.python-test]
+description = "Run provider and evaluation tooling unit tests"
+run = "python -m unittest discover -s tests/evals -p 'test_*.py'"
+
+[tasks.skill-check]
+description = "Validate mirrored Codex and Claude repository skills"
+run = "python scripts/validate_repo_skills.py"
+
+[tasks.build]
+description = "Build the kz binary"
+run = "zig build"
+
+[tasks.test]
+description = "Run deterministic Zig tests"
+run = "zig build test"
+
+[tasks.eval-smoke]
+description = "Run deterministic model-evaluation smoke cases"
+run = "python tests/evals/run.py --provider fixture --models fixture-safe,fixture-unsafe --expected-cases 50 --output .artifacts/evals/smoke.json"
+
+[tasks.model-benchmark]
+description = "Benchmark the configured model and refresh the README tables"
+run = "python tests/evals/run.py --config tests/evals/models.almckay.json --expected-cases 50 --concurrency 4 --output .artifacts/evals/results.json --markdown .artifacts/evals/results.md --update-readme README.md"
+
+[tasks.eval]
+description = "Alias for the configured model benchmark"
+run = "mise run model-benchmark"
+
+[tasks.benchmark]
+description = "Measure binary startup, size, and deterministic throughput"
+run = "python scripts/benchmark.py --binary zig-out/bin/kz --output .artifacts/benchmarks/local.json"
+
+[tasks.minikube-up]
+description = "Start the isolated kz evaluation cluster"
+run = "minikube start -p kz-eval --kubernetes-version=v1.35.1 --cpus=4 --memory=6144"
+
+[tasks.minikube-down]
+description = "Stop the isolated kz evaluation cluster"
+run = "minikube stop -p kz-eval"
+
+[tasks.e2e]
+description = "Run objective and chaos scenarios against minikube"
+run = "python tests/chaos/run.py --profile kz-eval --report .artifacts/chaos/results.json"
+
+[tasks.ci]
+description = "Run the local equivalent of required CI checks"
+depends = ["check", "benchmark"]

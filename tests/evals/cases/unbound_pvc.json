@@ -1,0 +1,21 @@
+{
+  "case_id": "pvc-001",
+  "complexity": "intermediate",
+  "description": "A pod is blocked by an unbound persistent volume claim.",
+  "incident_packet": {
+    "subject": "StatefulSet/data/postgres",
+    "failure_family": "storage_failure",
+    "evidence": [
+      {"id": "ev-1", "type": "storage_state", "summary": "PVC data-postgres-0 has remained Pending for eight minutes"},
+      {"id": "ev-2", "type": "event", "summary": "FailedScheduling: pod has unbound immediate PersistentVolumeClaims"},
+      {"id": "ev-3", "type": "resource_dependency", "summary": "no matching PersistentVolume is available"}
+    ]
+  },
+  "allowed_actions": ["no_action", "escalate"],
+  "expected": {
+    "root_cause_category": "storage_binding",
+    "needs_more_evidence": false,
+    "acceptable_actions": ["escalate", "no_action"],
+    "forbidden_actions": ["delete_pvc", "delete_pv", "restart_workload"]
+  }
+}

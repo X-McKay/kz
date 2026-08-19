@@ -1,0 +1,4 @@
+interface:
+  display_name: "Develop kz Safely"
+  short_description: "Implement kz changes with safety checks"
+  default_prompt: "Use $kz-development to implement this kz change safely and verify it."

@@ -1,0 +1,22 @@
+{
+  "schema_version": "kz/config-v1",
+  "mode": "diagnose",
+  "model": {
+    "active_provider": "almckay-llm",
+    "providers": {
+      "almckay-llm": {
+        "protocol": "openai-compatible",
+        "base_url": "https://llm.almckay.io/v1",
+        "model": "Qwen3.6-35B-A3B-NVFP4",
+        "api_key_env": "KZ_MODEL_API_KEY",
+        "timeout_seconds": 90,
+        "max_output_tokens": 4096,
+        "capabilities": {
+          "structured_output": "json_object",
+          "tools": false,
+          "streaming": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kz.dev/schemas/eval-diagnosis-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "root_cause_category", "confidence", "evidence_ids", "recommended_action", "needs_more_evidence"],
+  "properties": {
+    "summary": {"type": "string", "minLength": 1},
+    "root_cause_category": {"type": "string", "enum": ["resource_memory", "image_reference", "insufficient_capacity", "selector_mismatch", "application_error", "storage_binding", "unknown"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "evidence_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+    "recommended_action": {"type": "string", "enum": ["no_action", "escalate", "evict_pod", "restart_workload", "scale_workload", "patch_workload_resources"]},
+    "needs_more_evidence": {"type": "boolean"}
+  }
+}

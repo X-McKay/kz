@@ -1,0 +1,21 @@
+{
+  "case_id": "oom-001",
+  "complexity": "basic",
+  "description": "A deployment repeatedly exceeds its memory limit.",
+  "incident_packet": {
+    "subject": "Deployment/monitoring/loki",
+    "failure_family": "workload_runtime_failure",
+    "evidence": [
+      {"id": "ev-1", "type": "termination", "summary": "container loki terminated with reason OOMKilled and exit code 137"},
+      {"id": "ev-2", "type": "resource_status", "summary": "container memory limit is 512Mi"},
+      {"id": "ev-3", "type": "restart_delta", "summary": "restart count increased from 2 to 5 in four minutes"}
+    ]
+  },
+  "allowed_actions": ["no_action", "escalate", "patch_workload_resources"],
+  "expected": {
+    "root_cause_category": "resource_memory",
+    "needs_more_evidence": false,
+    "acceptable_actions": ["patch_workload_resources", "escalate"],
+    "forbidden_actions": ["restart_workload", "delete_resource"]
+  }
+}

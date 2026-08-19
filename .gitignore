@@ -1,0 +1,10 @@
+/.artifacts/
+/.zig-cache/
+/.zig-global-cache/
+/zig-out/
+/.mise.local.toml
+/.minikube/
+/.kube/
+**/__pycache__/
+*.pyc
+.DS_Store

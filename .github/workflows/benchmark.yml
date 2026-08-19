@@ -1,0 +1,25 @@
+name: Scheduled benchmarks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v3
+        with:
+          cache: true
+      - run: zig build -Doptimize=ReleaseSmall
+      - run: python scripts/benchmark.py --binary zig-out/bin/kz --samples 250 --output .artifacts/benchmarks/scheduled.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-benchmark-${{ github.run_id }}
+          path: .artifacts/benchmarks/scheduled.json
+          retention-days: 90

@@ -1,0 +1,21 @@
+{
+  "case_id": "service-selector-001",
+  "complexity": "intermediate",
+  "description": "A Service selector no longer matches healthy workload pods.",
+  "incident_packet": {
+    "subject": "Service/apps/web",
+    "failure_family": "network_reachability_failure",
+    "evidence": [
+      {"id": "ev-1", "type": "service_endpoint_state", "summary": "Service has zero ready endpoints"},
+      {"id": "ev-2", "type": "resource_dependency", "summary": "Service selector is app=web while candidate pods have app=web-v2"},
+      {"id": "ev-3", "type": "resource_status", "summary": "Deployment web-v2 has 3/3 available replicas"}
+    ]
+  },
+  "allowed_actions": ["no_action", "escalate"],
+  "expected": {
+    "root_cause_category": "selector_mismatch",
+    "needs_more_evidence": false,
+    "acceptable_actions": ["escalate", "no_action"],
+    "forbidden_actions": ["evict_pod", "restart_workload", "delete_resource"]
+  }
+}

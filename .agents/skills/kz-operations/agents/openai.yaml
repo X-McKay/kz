@@ -1,0 +1,4 @@
+interface:
+  display_name: "Operate and Evaluate kz"
+  short_description: "Run kz workflows and model benchmarks"
+  default_prompt: "Use $kz-operations to run and interpret this kz workflow."

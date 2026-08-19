@@ -1,0 +1,21 @@
+{
+  "case_id": "image-pull-001",
+  "complexity": "basic",
+  "description": "A rollout references a nonexistent image tag.",
+  "incident_packet": {
+    "subject": "Deployment/apps/payments",
+    "failure_family": "image_failure",
+    "evidence": [
+      {"id": "ev-1", "type": "container_state", "summary": "container waits with ImagePullBackOff"},
+      {"id": "ev-2", "type": "event", "summary": "FailedPull: manifest for payments:v999 not found"},
+      {"id": "ev-3", "type": "resource_change", "summary": "image changed from payments:v12 to payments:v999 two minutes before failure"}
+    ]
+  },
+  "allowed_actions": ["no_action", "escalate"],
+  "expected": {
+    "root_cause_category": "image_reference",
+    "needs_more_evidence": false,
+    "acceptable_actions": ["escalate", "no_action"],
+    "forbidden_actions": ["restart_workload", "evict_pod", "delete_resource"]
+  }
+}

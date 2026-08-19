@@ -1,0 +1,13 @@
+# This role is intentionally not bound by the base kustomization. Operators
+# must explicitly scope and bind mutation permissions after reviewing policy.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kz-bounded-mutator
+rules:
+  - apiGroups: [""]
+    resources: ["pods/eviction"]
+    verbs: ["create"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets"]
+    verbs: ["patch"]

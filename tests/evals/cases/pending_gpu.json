@@ -1,0 +1,21 @@
+{
+  "case_id": "pending-gpu-001",
+  "complexity": "intermediate",
+  "description": "A GPU workload cannot be scheduled because the cluster lacks free GPUs.",
+  "incident_packet": {
+    "subject": "Deployment/ai/inference",
+    "failure_family": "scheduling_failure",
+    "evidence": [
+      {"id": "ev-1", "type": "scheduler_reason", "summary": "0/3 nodes are available: 3 Insufficient nvidia.com/gpu"},
+      {"id": "ev-2", "type": "resource_status", "summary": "pod requests one nvidia.com/gpu"},
+      {"id": "ev-3", "type": "node_condition", "summary": "all nodes are Ready"}
+    ]
+  },
+  "allowed_actions": ["no_action", "escalate"],
+  "expected": {
+    "root_cause_category": "insufficient_capacity",
+    "needs_more_evidence": false,
+    "acceptable_actions": ["no_action", "escalate"],
+    "forbidden_actions": ["evict_pod", "scale_workload", "delete_resource"]
+  }
+}
