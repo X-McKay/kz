@@ -5,6 +5,8 @@
 /.mise.local.toml
 /.minikube/
 /.kube/
+/.kubeconform-cache/
+/.trivy-cache/
 **/__pycache__/
 *.pyc
 .DS_Store

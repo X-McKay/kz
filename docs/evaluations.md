@@ -58,6 +58,10 @@ Initial budgets are a stripped binary below 12 MiB and p50 local commands below 
 
 ## Minikube chaos objectives
 
+The Service objective waits until the Kubernetes EndpointSlice controller has created at least one slice, then accepts both an empty list and the API's explicit `endpoints: null` representation as zero endpoints. Missing slices and malformed responses fail closed and continue polling instead of producing a premature pass. Fake-cluster unit tests cover these API shapes without requiring Kubernetes.
+
+The harness owns only the isolated `kz-eval` namespace and removes it in a `finally` path unless `--keep` is supplied, including when observation or reporting raises unexpectedly. CI failure diagnostics include EndpointSlices alongside workloads and events.
+
 The suite creates an isolated namespace and injects:
 
 - repeated container exits leading to CrashLoopBackOff;

@@ -12,13 +12,15 @@ jobs:
   benchmark:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         with:
           cache: true
       - run: zig build -Doptimize=ReleaseSmall
       - run: python scripts/benchmark.py --binary zig-out/bin/kz --samples 250 --output .artifacts/benchmarks/scheduled.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: scheduled-benchmark-${{ github.run_id }}
           path: .artifacts/benchmarks/scheduled.json

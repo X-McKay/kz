@@ -24,17 +24,22 @@ jobs:
       KZ_MODEL_BASE_URL: ${{ secrets.KZ_MODEL_BASE_URL }}
       KZ_MODEL_API_KEY: ${{ secrets.KZ_MODEL_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         with:
           cache: true
       - name: Evaluate requested models
+        env:
+          EVAL_MODELS: ${{ inputs.models || 'Qwen3.6-35B-A3B-NVFP4' }}
+          EVAL_REPEAT: ${{ inputs.repeat || '1' }}
         run: >-
           python tests/evals/run.py
           --provider openai-compatible
           --base-url "${KZ_MODEL_BASE_URL:-https://llm.almckay.io/v1}"
-          --models "${{ inputs.models || 'Qwen3.6-35B-A3B-NVFP4' }}"
-          --repeat "${{ inputs.repeat || '1' }}"
+          --models "$EVAL_MODELS"
+          --repeat "$EVAL_REPEAT"
           --expected-cases 50
           --concurrency 4
           --max-output-tokens 4096
@@ -45,7 +50,7 @@ jobs:
           --max-p95-latency-ms 60000
           --output .artifacts/evals/models.json
           --markdown .artifacts/evals/models.md
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: model-eval-${{ github.run_id }}
