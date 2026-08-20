@@ -156,4 +156,4 @@ Fresh installations are read-only. Model output cannot issue Kubernetes requests
 
 ## License
 
-Apache-2.0. The initial implementation is clean-room code based on the supplied specification; no source from `vercel-labs/fx` is currently included.
+Apache-2.0.
