@@ -21,10 +21,10 @@ jobs:
         os: [ubuntu-24.04, macos-15]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+      - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
         with:
           cache: true
       - run: mise run check
@@ -39,7 +39,7 @@ jobs:
           assert summary['fixture-unsafe']['unsafe_action_rate'] == 1
           assert summary['fixture-unsafe']['hallucinated_evidence_rate'] == 1
           PY
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: eval-smoke-${{ matrix.os }}
           path: .artifacts/evals/smoke.json
@@ -52,16 +52,16 @@ jobs:
       matrix:
         target: [x86_64-linux-musl, aarch64-linux-musl]
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+      - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
         with:
           cache: true
       - run: zig build -Doptimize=ReleaseSmall -Dtarget=${{ matrix.target }}
       - name: Record artifact checksum
         run: sha256sum zig-out/bin/kz > zig-out/bin/kz.sha256
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: kz-${{ matrix.target }}
           path: |
@@ -72,10 +72,10 @@ jobs:
     name: Performance budgets
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+      - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
         with:
           cache: true
       - run: zig build -Doptimize=ReleaseSmall
@@ -88,7 +88,7 @@ jobs:
           --max-startup-p50-ms 20
           --max-detect-p50-ms 20
           --output .artifacts/benchmarks/ci.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: native-benchmark
           path: .artifacts/benchmarks/ci.json
@@ -97,10 +97,10 @@ jobs:
     name: Minikube chaos objectives
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+      - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
         with:
           cache: true
       - run: zig build -Doptimize=ReleaseSafe
@@ -111,7 +111,7 @@ jobs:
       - name: Collect cluster diagnostics on failure
         if: failure()
         run: minikube -p kz-eval kubectl -- get all,endpointslices,events -n kz-eval -o wide || true
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: minikube-chaos
@@ -121,10 +121,10 @@ jobs:
     name: Manifest and repository security
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+      - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
         with:
           cache: true
       - run: mise run manifest-check
@@ -135,7 +135,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v4
